@@ -20,7 +20,7 @@ RUN composer dump-autoload \
 
 
 # ---------- Stage 2: Aplicação ----------
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 WORKDIR /var/www/html
 
