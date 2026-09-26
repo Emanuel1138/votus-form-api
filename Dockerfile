@@ -1,25 +1,25 @@
-# ---------- Stage 1: dependências do Composer ----------
+# ---------- Stage 1: Composer ----------
 FROM composer:2 AS vendor
 
 WORKDIR /app
 
-# Copia apenas os arquivos necessários para instalar as dependências
 COPY composer.json composer.lock ./
 
 RUN composer install \
     --no-interaction \
     --no-dev \
     --prefer-dist \
-    --optimize-autoloader
+    --no-scripts \
+    --no-autoloader
 
-# Agora copia o restante do projeto
 COPY . .
 
-# Garante que o autoload esteja atualizado
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload \
+    --optimize \
+    --no-dev
 
 
-# ---------- Stage 2: aplicação ----------
+# ---------- Stage 2: Aplicação ----------
 FROM php:8.3-fpm-alpine
 
 WORKDIR /var/www/html
@@ -45,25 +45,24 @@ RUN apk add --no-cache \
     bcmath \
     opcache
 
-# Copia a aplicação com as dependências do Composer
+# Copia aplicação + vendor
 COPY --from=vendor /app /var/www/html
 
-# Copia configurações do Docker
+# Configurações
 COPY docker/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/start.sh /usr/local/bin/start.sh
 
-# Permissões e preparação dos diretórios do Laravel
+# Permissões
 RUN chmod +x /usr/local/bin/start.sh \
-    && mkdir -p /var/www/html/storage \
-    /var/www/html/bootstrap/cache \
-    /run/nginx \
+    && mkdir -p \
+        /var/www/html/storage \
+        /var/www/html/bootstrap/cache \
+        /run/nginx \
     && chown -R www-data:www-data \
-    /var/www/html/storage \
-    /var/www/html/bootstrap/cache
+        /var/www/html/storage \
+        /var/www/html/bootstrap/cache
 
-# Render fornece a porta através da variável PORT
 EXPOSE 8080
 
-# Inicialização
 CMD ["/usr/local/bin/start.sh"]
