@@ -18,4 +18,20 @@ class SurveyResponseService
             ]
         );
     }
+
+    public function getResultsSummary(): array
+    {
+        $summary = [];
+
+        SurveyResponse::pluck('answers')->each(function ($answers) use (&$summary) {
+            foreach ($answers as $answer) {
+                $questionId = $answer['question_id'];
+                $answerText = $answer['answer'];
+
+                $summary[$questionId][$answerText] = ($summary[$questionId][$answerText] ?? 0) + 1;
+            }
+        });
+
+        return $summary;
+    }
 }

@@ -15,4 +15,9 @@ class SurveyResponseController extends Controller
 
         return response()->json(['id' => $response->id], 201);
     }
+
+    public function summary()
+    {
+        return response()->json($this->service->getResultsSummary());
+    }
 }
